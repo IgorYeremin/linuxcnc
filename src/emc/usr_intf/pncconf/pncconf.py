@@ -1586,16 +1586,6 @@ class App:
                     c = raw_input("\n**** Debug Pause! ****")
                 return
 
-    def gtk_main_quit(self, *args):
-        gtk.main_quit()
-
-    def on_window1_delete_event(self, *args):
-        if self.warning_dialog (_("Quit PNCconfig and discard changes?"),False):
-            gtk.main_quit()
-            return False
-        else:
-            return True
-
     def query_dialog(self,title, message):
         def responseToDialog(entry, dialog, response):
             dialog.response(response)
