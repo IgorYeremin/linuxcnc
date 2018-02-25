@@ -68,7 +68,7 @@
 #include "rtapi.h"              /* RTAPI realtime OS API */
 #include "rtapi_app.h"          /* RTAPI realtime module decls */
 #include "hal.h"                /* HAL public API decls */
-#include "streamer.h"		/* decls and such for fifos */
+#include "streamer.h"                /* decls and such for fifos */
 #include "rtapi_errno.h"
 #include "rtapi_string.h"
 
@@ -76,9 +76,9 @@
 MODULE_AUTHOR("John Kasunich");
 MODULE_DESCRIPTION("Realtime File Streamer HAL");
 MODULE_LICENSE("GPL");
-static char *cfg[MAX_STREAMERS];	/* config string, no default */
+static char *cfg[MAX_STREAMERS];        /* config string, no default */
 RTAPI_MP_ARRAY_STRING(cfg,MAX_STREAMERS,"config string");
-static int depth[MAX_STREAMERS];	/* depth of fifo, default 0 */
+static int depth[MAX_STREAMERS];        /* depth of fifo, default 0 */
 RTAPI_MP_ARRAY_INT(depth,MAX_STREAMERS,"fifo depth");
 
 /***********************************************************************
@@ -88,19 +88,19 @@ RTAPI_MP_ARRAY_INT(depth,MAX_STREAMERS,"fifo depth");
 /* this structure contains the HAL shared memory data for one streamer */
 
 typedef struct {
-    hal_stream_t fifo;		/* pointer to user/RT fifo */
-    hal_s32_t *curr_depth;	/* pin: current fifo depth */
-    hal_bit_t *empty;		/* pin: underrun flag */
-    hal_bit_t *enable;		/* pin: enable streaming */
-    hal_s32_t *underruns;	/* pin: number of underruns */
-    hal_bit_t *clock;		/* pin: clock input */
-    hal_s32_t *clock_mode;	/* pin: clock mode */
-    int myclockedge;	        /* clock edge detector */
+    hal_stream_t fifo;                /* pointer to user/RT fifo */
+    hal_s32_t *curr_depth;        /* pin: current fifo depth */
+    hal_bit_t *empty;                /* pin: underrun flag */
+    hal_bit_t *enable;                /* pin: enable streaming */
+    hal_s32_t *underruns;        /* pin: number of underruns */
+    hal_bit_t *clock;                /* pin: clock input */
+    hal_s32_t *clock_mode;        /* pin: clock mode */
+    int myclockedge;                /* clock edge detector */
     pin_data_t pins[HAL_STREAM_MAX_PINS];
 } streamer_t;
 
 /* other globals */
-static int comp_id;		/* component ID */
+static int comp_id;                /* component ID */
 static int nstreamers;
 static streamer_t *streams;
 
@@ -121,29 +121,29 @@ int rtapi_app_main(void)
 
     comp_id = hal_init("streamer");
     if (comp_id < 0) {
-	rtapi_print_msg(RTAPI_MSG_ERR, "STREAMER: ERROR: hal_init() failed\n");
-	return -EINVAL;
+        rtapi_print_msg(RTAPI_MSG_ERR, "STREAMER: ERROR: hal_init() failed\n");
+        return -EINVAL;
     }
 
     streams = hal_malloc(MAX_STREAMERS * sizeof(streamer_t));
 
     /* validate config info */
     for ( n = 0 ; n < MAX_STREAMERS ; n++ ) {
-	if (( cfg[n] == NULL ) || ( *cfg == '\0' ) || ( depth[n] <= 0 )) {
-	    break;
-	}
-	retval = hal_stream_create(&streams[n].fifo, comp_id, STREAMER_SHMEM_KEY+n, depth[n], cfg[n]);
-	if(retval < 0) {
-	    goto fail;
-	}
-	nstreamers++;
-	retval = init_streamer(n, &streams[n]);
+        if (( cfg[n] == NULL ) || ( *cfg == '\0' ) || ( depth[n] <= 0 )) {
+            break;
+        }
+        retval = hal_stream_create(&streams[n].fifo, comp_id, STREAMER_SHMEM_KEY+n, depth[n], cfg[n]);
+        if(retval < 0) {
+            goto fail;
+        }
+        nstreamers++;
+        retval = init_streamer(n, &streams[n]);
     }
     if ( n == 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: no channels specified\n");
-	retval = -EINVAL;
-	goto fail;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: no channels specified\n");
+        retval = -EINVAL;
+        goto fail;
     }
 
     hal_ready(comp_id);
@@ -213,46 +213,46 @@ static void update(void *arg, long period)
     *(str->curr_depth) = depth;
     *(str->empty) = depth == 0;
     if(!doclk)
-	/* done - output pins retain current values */
-	return;
+        /* done - output pins retain current values */
+        return;
     if(depth == 0) {
-	/* increase underrun only for valid clock*/
-	(*str->underruns)++;
-	return;
+        /* increase underrun only for valid clock*/
+        (*str->underruns)++;
+        return;
     }
     union hal_stream_data data[HAL_STREAM_MAX_PINS];
     if(hal_stream_read(&str->fifo, data, NULL) < 0)
     {
         /* should not happen (single reader invariant) */
-	(*str->underruns)++;
-	return;
+        (*str->underruns)++;
+        return;
     }
     union hal_stream_data *dptr = data;
     int num_pins = hal_stream_element_count(&str->fifo);
     /* copy data from fifo to HAL pins */
     for ( n = 0 ; n < num_pins ; n++ ) {
-	switch ( hal_stream_element_type(&str->fifo, n) ) {
-	case HAL_FLOAT:
-	    *(pptr->hfloat) = dptr->f;
-	    break;
-	case HAL_BIT:
-	    if ( dptr->b ) {
-		*(pptr->hbit) = 1;
-	    } else {
-		*(pptr->hbit) = 0;
-	    }
-	    break;
-	case HAL_U32:
-	    *(pptr->hu32) = dptr->u;
-	    break;
-	case HAL_S32:
-	    *(pptr->hs32) = dptr->s;
-	    break;
-	default:
-	    break;
-	}
-	dptr++;
-	pptr++;
+        switch ( hal_stream_element_type(&str->fifo, n) ) {
+        case HAL_FLOAT:
+            *(pptr->hfloat) = dptr->f;
+            break;
+        case HAL_BIT:
+            if ( dptr->b ) {
+                *(pptr->hbit) = 1;
+            } else {
+                *(pptr->hbit) = 0;
+            }
+            break;
+        case HAL_U32:
+            *(pptr->hu32) = dptr->u;
+            break;
+        case HAL_S32:
+            *(pptr->hs32) = dptr->s;
+            break;
+        default:
+            break;
+        }
+        dptr++;
+        pptr++;
     }
 }
 
@@ -264,48 +264,48 @@ static int init_streamer(int num, streamer_t *str)
 
     /* export "standard" pins and params */
     retval = hal_pin_bit_newf(HAL_OUT, &(str->empty), comp_id,
-	"streamer.%d.empty", num);
+        "streamer.%d.empty", num);
     if (retval != 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: 'empty' pin export failed\n");
-	return -EIO;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: 'empty' pin export failed\n");
+        return -EIO;
     }
     retval = hal_pin_bit_newf(HAL_IN, &(str->enable), comp_id,
-	"streamer.%d.enable", num);
+        "streamer.%d.enable", num);
     if (retval != 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: 'enable' pin export failed\n");
-	return -EIO;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: 'enable' pin export failed\n");
+        return -EIO;
     }
     retval = hal_pin_s32_newf(HAL_OUT, &(str->curr_depth), comp_id,
-	"streamer.%d.curr-depth", num);
+        "streamer.%d.curr-depth", num);
     if (retval != 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: 'curr_depth' pin export failed\n");
-	return -EIO;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: 'curr_depth' pin export failed\n");
+        return -EIO;
     }
     retval = hal_pin_s32_newf(HAL_IO, &(str->underruns), comp_id,
-	"streamer.%d.underruns", num);
+        "streamer.%d.underruns", num);
     if (retval != 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: 'underruns' pin export failed\n");
-	return -EIO;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: 'underruns' pin export failed\n");
+        return -EIO;
     }
 
     retval = hal_pin_bit_newf(HAL_IN, &(str->clock), comp_id,
-	"streamer.%d.clock", num);
+        "streamer.%d.clock", num);
     if (retval != 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: 'clock' pin export failed\n");
-	return -EIO;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: 'clock' pin export failed\n");
+        return -EIO;
     }
 
     retval = hal_pin_s32_newf(HAL_IN, &(str->clock_mode), comp_id,
-	"streamer.%d.clock-mode", num);
+        "streamer.%d.clock-mode", num);
     if (retval != 0 ) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: 'clock_mode' pin export failed\n");
-	return -EIO;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: 'clock_mode' pin export failed\n");
+        return -EIO;
     }
 
     /* init the standard pins and params */
@@ -318,40 +318,40 @@ static int init_streamer(int num, streamer_t *str)
     usefp = 0;
     /* export user specified pins (the ones that stream data) */
     for ( n = 0 ; n < hal_stream_element_count(&str->fifo); n++ ) {
-	rtapi_snprintf(buf, sizeof(buf), "streamer.%d.pin.%d", num, n);
-	retval = hal_pin_new(buf, hal_stream_element_type(&str->fifo, n), HAL_OUT, (void **)pptr, comp_id );
-	if (retval != 0 ) {
-	    rtapi_print_msg(RTAPI_MSG_ERR,
-		"STREAMER: ERROR: pin '%s' export failed\n", buf);
-	    return -EIO;
-	}
-	/* init the pin value */
-	switch ( hal_stream_element_type(&str->fifo, n) ) {
-	case HAL_FLOAT:
-	    *(pptr->hfloat) = 0.0;
-	    usefp = 1;
-	    break;
-	case HAL_BIT:
-	    *(pptr->hbit) = 0;
-	    break;
-	case HAL_U32:
-	    *(pptr->hu32) = 0;
-	    break;
-	case HAL_S32:
-	    *(pptr->hs32) = 0;
-	    break;
-	default:
-	    break;
-	}
-	pptr++;
+        rtapi_snprintf(buf, sizeof(buf), "streamer.%d.pin.%d", num, n);
+        retval = hal_pin_new(buf, hal_stream_element_type(&str->fifo, n), HAL_OUT, (void **)pptr, comp_id );
+        if (retval != 0 ) {
+            rtapi_print_msg(RTAPI_MSG_ERR,
+                "STREAMER: ERROR: pin '%s' export failed\n", buf);
+            return -EIO;
+        }
+        /* init the pin value */
+        switch ( hal_stream_element_type(&str->fifo, n) ) {
+        case HAL_FLOAT:
+            *(pptr->hfloat) = 0.0;
+            usefp = 1;
+            break;
+        case HAL_BIT:
+            *(pptr->hbit) = 0;
+            break;
+        case HAL_U32:
+            *(pptr->hu32) = 0;
+            break;
+        case HAL_S32:
+            *(pptr->hs32) = 0;
+            break;
+        default:
+            break;
+        }
+        pptr++;
     }
     /* export update function */
     rtapi_snprintf(buf, sizeof(buf), "streamer.%d", num);
     retval = hal_export_funct(buf, update, str, usefp, 0, comp_id);
     if (retval != 0) {
-	rtapi_print_msg(RTAPI_MSG_ERR,
-	    "STREAMER: ERROR: function export failed\n");
-	return retval;
+        rtapi_print_msg(RTAPI_MSG_ERR,
+            "STREAMER: ERROR: function export failed\n");
+        return retval;
     }
 
     return 0;
