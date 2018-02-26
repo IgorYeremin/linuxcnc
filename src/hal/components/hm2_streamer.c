@@ -80,8 +80,8 @@ MODULE_DESCRIPTION("Realtime Streamer to Hostmot2 pktuart");
 MODULE_LICENSE("GPL");
 static char *name[MAX_STREAMERS];        /* config string, no default */
 RTAPI_MP_ARRAY_STRING(name,MAX_STREAMERS,"config string");
-static int depth[MAX_STREAMERS];        /* depth of fifo, default 0 */
-RTAPI_MP_ARRAY_INT(depth,MAX_STREAMERS,"fifo depth");
+static int depths[MAX_STREAMERS];        /* depth of fifo, default 0 */
+RTAPI_MP_ARRAY_INT(depths,MAX_STREAMERS,"fifo depth");
 static int key[MAX_STREAMERS];        /* rtapi fifo shared key */
 RTAPI_MP_ARRAY_INT(key,MAX_STREAMERS,"fifo shared key");
 
@@ -132,7 +132,7 @@ int rtapi_app_main(void)
 
     /* validate config info */
     for ( n = 0 ; n < MAX_STREAMERS ; n++ ) {
-        if (( name[n] == NULL ) || ( *name == '\0' ) || ( depth[n] <= 0 )) {
+        if (( name[n] == NULL ) || ( *name == '\0' ) || ( depths[n] <= 0 )) {
             break;
         }
         int fifo = rtapi_fifo_new(key[n], comp_id, depths[n], 'R');
@@ -150,13 +150,13 @@ int rtapi_app_main(void)
         int driveEn = 0 & 1;
         int driveEnAuto = 0 & 1;
         int driveEnDelay = 0 & 0x7;
-        int TxMode = (interFrameDelay << 8) | (driveEn << 6) | (driveEnAuto << 5) | (driveEndDelay);
+        int TxMode = (interFrameDelay << 8) | (driveEn << 6) | (driveEnAuto << 5) | (driveEnDelay);
 
         int interFrameDelayR = 0x05 & 0xff;
         int rxMask = 0 & 1;
         int rxEnable = 0 & 1;
         int rxMaskEn = 0 & 1;
-        int RxMode = (interFrameDelayR << 8) | (rxMask << 6) | (rxEanble << 3) | (rxMaskEn << 2);
+        int RxMode = (interFrameDelayR << 8) | (rxMask << 6) | (rxEnable << 3) | (rxMaskEn << 2);
 
         retval = hm2_pktuart_setup(name[n], BAUDRATE, TxMode, RxMode, 1, 1);
         if (retval<0)
@@ -177,7 +177,7 @@ int rtapi_app_main(void)
     hal_ready(comp_id);
     return 0;
 fail:
-    for(n=0; n<nstreamers; n++) rtapi_fifo_delete(&streams[n].fifo, comp_id);
+    for(n=0; n<nstreamers; n++) rtapi_fifo_delete(streams[n].fifo, comp_id);
     hal_exit(comp_id);
     return retval;
 }
@@ -185,7 +185,7 @@ fail:
 void rtapi_app_exit(void)
 {
     int i;
-    for(i=0; i<nstreamers; i++) rtapi_fifo_delete(&streams[n].fifo, comp_id);
+    for(i=0; i<nstreamers; i++) rtapi_fifo_delete(streams[i].fifo, comp_id);
     hal_exit(comp_id);
 }
 
@@ -240,7 +240,7 @@ static void update(void *arg, long period)
 
     char buffer[1024 + 1];
     int nchars;
-    nchars = rtapi_fifo_read(fifo, buffer, 1024);
+    nchars = rtapi_fifo_read(str->fifo, buffer, 1024);
     if (nchars <= 0) {
         rtapi_print_msg(RTAPI_MSG_ERR,
             "hm2_streamer main: rtapi_fifo_read returned %d\n", nchars);
@@ -311,4 +311,3 @@ static int init_streamer(int num, streamer_t *str)
 
     return 0;
 }
-
