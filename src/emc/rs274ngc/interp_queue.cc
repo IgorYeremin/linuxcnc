@@ -102,6 +102,58 @@ void enqueue_SET_FEED_MODE(int mode) {
     qc().push_back(q);
 }
 
+void enqueue_SET_MOTION_OUTPUT_BIT(int bit) {
+    if(qc().empty()) {
+        if(debug_qc) printf("immediate set synchronized digital bit %d\n", bit);
+        SET_MOTION_OUTPUT_BIT(bit);
+        return;
+    }
+    queued_canon q;
+    q.type = QSET_MOTION_OUTPUT_BIT;
+    q.data.set_digital_bit.bit = bit;
+    if(debug_qc) printf("enqueue set synchronized digital bit %d\n", bit);
+    qc().push_back(q);
+}
+
+void enqueue_CLEAR_MOTION_OUTPUT_BIT(int bit) {
+    if(qc().empty()) {
+        if(debug_qc) printf("immediate clear synchronized digital bit %d\n", bit);
+        CLEAR_MOTION_OUTPUT_BIT(bit);
+        return;
+    }
+    queued_canon q;
+    q.type = QCLEAR_MOTION_OUTPUT_BIT;
+    q.data.set_digital_bit.bit = bit;
+    if(debug_qc) printf("enqueue clear synchronized digital bit %d\n", bit);
+    qc().push_back(q);
+}
+
+void enqueue_SET_AUX_OUTPUT_BIT(int bit) {
+    if(qc().empty()) {
+        if(debug_qc) printf("immediate set digital bit %d\n", bit);
+        SET_AUX_OUTPUT_BIT(bit);
+        return;
+    }
+    queued_canon q;
+    q.type = QSET_AUX_OUTPUT_BIT;
+    q.data.set_digital_bit.bit = bit;
+    if(debug_qc) printf("enqueue set digital bit %d\n", bit);
+    qc().push_back(q);
+}
+
+void enqueue_CLEAR_AUX_OUTPUT_BIT(int bit) {
+    if(qc().empty()) {
+        if(debug_qc) printf("immediate clear digital bit %d\n", bit);
+        CLEAR_AUX_OUTPUT_BIT(bit);
+        return;
+    }
+    queued_canon q;
+    q.type = QCLEAR_AUX_OUTPUT_BIT;
+    q.data.set_digital_bit.bit = bit;
+    if(debug_qc) printf("enqueue clear digital bit %d\n", bit);
+    qc().push_back(q);
+}
+
 void enqueue_MIST_ON(void) {
     if(qc().empty()) {
         if(debug_qc) printf("immediate mist on\n");
@@ -476,6 +528,22 @@ void dequeue_canons(setup_pointer settings) {
         case QSET_FEED_RATE:
             if(debug_qc) printf("issuing set feed rate\n");
             SET_FEED_RATE(q.data.set_feed_rate.feed);
+            break;
+        case QSET_MOTION_OUTPUT_BIT:
+            if(debug_qc) printf("issuing set synchronized output bit\n");
+            SET_MOTION_OUTPUT_BIT(q.data.set_digital_bit.bit);
+            break;
+        case QCLEAR_MOTION_OUTPUT_BIT:
+            if(debug_qc) printf("issuing clear synchronized output bit\n");
+            CLEAR_MOTION_OUTPUT_BIT(q.data.set_digital_bit.bit);
+            break;
+        case QSET_AUX_OUTPUT_BIT:
+            if(debug_qc) printf("issuing set output bit\n");
+            SET_AUX_OUTPUT_BIT(q.data.set_digital_bit.bit);
+            break;
+        case QCLEAR_AUX_OUTPUT_BIT:
+            if(debug_qc) printf("issuing clear output bit\n");
+            CLEAR_AUX_OUTPUT_BIT(q.data.set_digital_bit.bit);
             break;
         case QDWELL:
             if(debug_qc) printf("issuing dwell\n");
