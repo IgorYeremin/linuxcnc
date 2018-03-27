@@ -861,6 +861,14 @@ int Interp::convert_arc_comp2(int move,  //!< either G_2 (cw arc) or G_3 (ccw ar
         // or tangent line->arc (atop "h" shape)
         (fabs(beta - M_PIl) < small && !TOOL_INSIDE_ARC(side, turn))
         ) {
+
+
+    	CHKS((     qc().front().type == QSET_MOTION_OUTPUT_BIT 
+		|| qc().front().type == QCLEAR_MOTION_OUTPUT_BIT
+		|| qc().front().type == QSET_AUX_OUTPUT_BIT
+		|| qc().front().type == QCLEAR_AUX_OUTPUT_BIT),
+		_("Digital output bit in queue when expecting motion arc_comp2!"));
+
         // concave
         if (qc().front().type != QARC_FEED) {
             // line->arc
@@ -4905,7 +4913,13 @@ int Interp::convert_straight_comp2(int move,     //!< either G_0 or G_1
         end_y = (py + (radius * sin(alpha + gamma)));
         mid_x = (opx + (radius * cos(alpha + gamma)));
         mid_y = (opy + (radius * sin(alpha + gamma)));
-    
+
+    	CHKS((     qc().front().type == QSET_MOTION_OUTPUT_BIT 
+		|| qc().front().type == QCLEAR_MOTION_OUTPUT_BIT
+		|| qc().front().type == QSET_AUX_OUTPUT_BIT
+		|| qc().front().type == QCLEAR_AUX_OUTPUT_BIT),
+		_("Digital output bit in queue when expecting motion straight_comp2!"));
+
         if ((beta < -small) || (beta > (M_PIl + small))) {
             concave = 1;
         } else if (beta > (M_PIl - small) &&

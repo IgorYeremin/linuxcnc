@@ -19,7 +19,7 @@
 #include "interp_internal.hh"
 #include "rs274ngc_interp.hh"
 
-static int debug_qc = 0;
+static int debug_qc = 1;
 
 // lathe tools have strange origin points that are not at
 // the center of the radius.  This means that the point that
