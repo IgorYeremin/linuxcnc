@@ -1047,11 +1047,11 @@ void emcmotCommandHandler(void *arg, long period)
 		break;
 	    }
             if(emcmotStatus->atspeed_next_feed && is_feed_type(emcmotCommand->motion_type) ) {
-                issue_atspeed = 1;
-                emcmotStatus->atspeed_next_feed = 0;
+                //issue_atspeed = 1;
+                //emcmotStatus->atspeed_next_feed = 0;
             }
             if(!is_feed_type(emcmotCommand->motion_type) && emcmotStatus->spindle.css_factor) {
-                emcmotStatus->atspeed_next_feed = 1;
+                //emcmotStatus->atspeed_next_feed = 1;
             }
 	    /* append it to the emcmotDebug->coord_tp */
 	    tpSetId(&emcmotDebug->coord_tp, emcmotCommand->id);
@@ -1105,8 +1105,8 @@ void emcmotCommandHandler(void *arg, long period)
 		break;
 	    }
             if(emcmotStatus->atspeed_next_feed) {
-                issue_atspeed = 1;
-                emcmotStatus->atspeed_next_feed = 0;
+                //issue_atspeed = 1;
+                //emcmotStatus->atspeed_next_feed = 0;
             }
 	    /* append it to the emcmotDebug->coord_tp */
 	    tpSetId(&emcmotDebug->coord_tp, emcmotCommand->id);
